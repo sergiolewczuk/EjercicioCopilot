@@ -49,20 +49,22 @@ com.ejerciciocopilot/
 
 ## ⚙️ Instalación y Ejecución
 
-### 1. Clonar el repositorio
+### Opción 1: Ejecución Local (Maven)
+
+#### 1. Clonar el repositorio
 
 ```bash
 git clone https://github.com/sergiolewczuk/EjercicioCopilot.git
 cd EjercicioCopilot
 ```
 
-### 2. Compilar el proyecto
+#### 2. Compilar el proyecto
 
 ```bash
 mvn clean package
 ```
 
-### 3. Ejecutar la aplicación
+#### 3. Ejecutar la aplicación
 
 ```bash
 mvn spring-boot:run
@@ -70,12 +72,61 @@ mvn spring-boot:run
 
 La aplicación estará disponible en: **http://localhost:8080**
 
-### 4. Acceder a las consolas
+### Opción 2: Ejecución con Docker (Recomendado)
+
+#### 1. Requisitos
+
+- Docker 20.10+
+- Docker Compose 2.0+
+
+#### 2. Construir imagen Docker
+
+```bash
+# Construir imagen
+docker build -t ejerciciocopilot:latest .
+
+# O con Makefile
+make build
+```
+
+#### 3. Ejecutar con Docker Compose
+
+```bash
+# Iniciar servicios
+docker-compose up -d
+
+# Ver logs
+docker-compose logs -f
+
+# O con Makefile
+make up
+make logs
+```
+
+#### 4. Detener servicios
+
+```bash
+docker-compose down
+
+# O con Makefile
+make down
+```
+
+**Ventajas de Docker:**
+- ✅ Entorno consistente (Dev = Prod)
+- ✅ No requiere instalar dependencias locales
+- ✅ Fácil de escalar con Kubernetes
+- ✅ Aislamiento de procesos
+
+**Documentación completa:** Ver [`DOCKER.md`](./DOCKER.md)
+
+### 5. Acceder a las consolas
 
 | Herramienta | URL | Usuario | Contraseña |
 |-------------|-----|---------|-----------|
 | **Swagger UI** | http://localhost:8080/swagger-ui.html | - | - |
 | **H2 Console** | http://localhost:8080/h2-console | sa | (vacía) |
+| **Health Check** | http://localhost:8080/actuator/health | - | - |
 | **JDBC URL (H2)** | jdbc:h2:mem:testdb | - | - |
 
 ## 📡 API Endpoints
@@ -362,13 +413,18 @@ Diagramas PlantUML en `/docs/uml/`:
 
 ## 🚀 Roadmap Futuro (Level White Shark+)
 
-- [ ] Docker: Containerizar la aplicación
+- [x] Docker: Containerizar la aplicación
+- [x] Docker Compose: Orquestación local
 - [ ] Tests de Integración con RestAssured
 - [ ] Autenticación OAuth2
 - [ ] Caché con Redis
-- [ ] Métricas con Actuator
+- [ ] Métricas con Actuator (básico ya incluido)
 - [ ] Trazabilidad distribuida
 - [ ] Generación de excusas con IA (integración LLM)
+- [ ] Kubernetes: Despliegue en clusters
+- [ ] PostgreSQL: Migrar de H2
+- [ ] API Rate Limiting
+- [ ] WebSockets para actualizaciones en tiempo real
 
 ## 📝 Convenciones de Código
 

@@ -1,0 +1,218 @@
+# ============================================================================
+# EjercicioCopilot - Docker Compose Configuration
+# ============================================================================
+#
+# Orquestación local con Docker Compose.
+# Servicios:
+#   - ejerciciocopilot-app: Aplicación Spring Boot principal
+#   - postgres (comentado): Para futura expansión con base de datos relacional
+#
+# Uso:
+#   docker-compose up -d           # Iniciar en background
+#   docker-compose logs -f          # Ver logs en vivo
+#   docker-compose down             # Detener y eliminar contenedores
+#   docker-compose down -v          # Detener, eliminar contenedores y volúmenes
+#
+
+version: '3.8'
+
+services:
+  # ========================================================================
+  # Servicio Principal: EjercicioCopilot Application
+  # ========================================================================
+  ejerciciocopilot-app:
+    # Construir imagen desde Dockerfile
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        JAVA_VERSION: "21"
+    
+    # Nombre del contenedor
+    container_name: ejerciciocopilot-app
+    
+    # Nombre de la imagen
+    image: ejerciciocopilot:latest
+    
+    # Puertos expuestos
+    ports:
+      - "8080:8080"
+      - "8081:8081"  # Puerto alternativo (opcional)
+    
+    # Variables de entorno
+    environment:
+      # JVM Options
+      JAVA_OPTS: "-Xmx512m -Xms256m -XX:+UseG1GC"
+      
+      # Spring Boot
+      SPRING_PROFILES_ACTIVE: "docker"
+      SERVER_PORT: "8080"
+      SERVER_SERVLET_CONTEXT_PATH: "/"
+      SERVER_SHUTDOWN: "graceful"
+      
+      # Base de datos H2 (en memoria)
+      SPRING_DATASOURCE_URL: "jdbc:h2:mem:testdb"
+      SPRING_DATASOURCE_DRIVER_CLASS_NAME: "org.h2.Driver"
+      SPRING_DATASOURCE_USERNAME: "sa"
+      SPRING_DATASOURCE_PASSWORD: ""
+      
+      # H2 Console
+      SPRING_H2_CONSOLE_ENABLED: "true"
+      SPRING_H2_CONSOLE_PATH: "/h2-console"
+      
+      # JPA/Hibernate
+      SPRING_JPA_DATABASE_PLATFORM: "org.hibernate.dialect.H2Dialect"
+      SPRING_JPA_HIBERNATE_DDL_AUTO: "create-drop"
+      SPRING_JPA_SHOW_SQL: "false"
+      SPRING_JPA_PROPERTIES_HIBERNATE_FORMAT_SQL: "true"
+      
+      # Logging
+      LOGGING_LEVEL_ROOT: "INFO"
+      LOGGING_LEVEL_COM_EJERCICIOCOPILOT: "DEBUG"
+      
+      # Actuator
+      MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE: "health,info,metrics"
+      MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS: "always"
+    
+    # Red personalizada
+    networks:
+      - ejerciciocopilot-network
+    
+    # Volúmenes (opcional, para logs)
+    volumes:
+      - ejerciciocopilot-logs:/app/logs
+    
+    # Política de reinicio
+    restart: unless-stopped
+    
+    # Health check
+    healthcheck:
+      # Comando para verificar salud (intenta conectarse a la app)
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health || exit 1"]
+      
+      # Intervalo entre checks
+      interval: 30s
+      
+      # Tiempo máximo de espera por respuesta
+      timeout: 10s
+      
+      # Número de fallos antes de marcar como unhealthy
+      retries: 3
+      
+      # Tiempo de espera antes de iniciar health checks
+      start_period: 40s
+    
+    # Recursos (limitado para no sobrecargar)
+    # deploy:
+    #   resources:
+    #     limits:
+    #       cpus: '0.5'
+    #       memory: 512M
+    #     reservations:
+    #       cpus: '0.25'
+    #       memory: 256M
+    
+    # Información del contenedor
+    labels:
+      - "com.ejerciciocopilot.description=Generador de Excusas Tech"
+      - "com.ejerciciocopilot.version=1.0.0"
+
+  # ========================================================================
+  # Servicio Opcional: PostgreSQL (descomentado para usar en producción)
+  # ========================================================================
+  # postgres:
+  #   image: postgres:15-alpine
+  #   container_name: ejerciciocopilot-db
+  #   
+  #   environment:
+  #     POSTGRES_DB: ejerciciocopilot
+  #     POSTGRES_USER: appuser
+  #     POSTGRES_PASSWORD: ${DB_PASSWORD:-changeme}  # Usar variable de entorno
+  #     PGDATA: /var/lib/postgresql/data/pgdata
+  #   
+  #   ports:
+  #     - "5432:5432"
+  #   
+  #   volumes:
+  #     - postgres-data:/var/lib/postgresql/data
+  #     - ./scripts/init.sql:/docker-entrypoint-initdb.d/01-init.sql
+  #   
+  #   networks:
+  #     - ejerciciocopilot-network
+  #   
+  #   restart: unless-stopped
+  #   
+  #   healthcheck:
+  #     test: ["CMD-SHELL", "pg_isready -U appuser"]
+  #     interval: 10s
+  #     timeout: 5s
+  #     retries: 5
+
+# ============================================================================
+# NETWORKS - Conectividad entre servicios
+# ============================================================================
+
+networks:
+  ejerciciocopilot-network:
+    driver: bridge
+    # enable_ipv6: false  # Desactivar IPv6 si no se necesita
+
+# ============================================================================
+# VOLUMES - Persistencia de datos
+# ============================================================================
+
+volumes:
+  # Volumen para logs de la aplicación
+  ejerciciocopilot-logs:
+    driver: local
+  
+  # Volumen para PostgreSQL (descomentado si se usa)
+  # postgres-data:
+  #   driver: local
+
+# ============================================================================
+# NOTAS Y USO
+# ============================================================================
+#
+# Iniciar servicios:
+#   docker-compose up -d
+#
+# Ver logs en vivo:
+#   docker-compose logs -f ejerciciocopilot-app
+#   docker-compose logs -f postgres (si está habilitado)
+#
+# Detener servicios:
+#   docker-compose down
+#
+# Detener y eliminar volúmenes:
+#   docker-compose down -v
+#
+# Forzar rebuild:
+#   docker-compose up -d --build
+#
+# Ejecutar comando en contenedor:
+#   docker-compose exec ejerciciocopilot-app bash
+#
+# Variables de entorno:
+#   Crear archivo .env en el mismo directorio que docker-compose.yml
+#   docker-compose --env-file .env up -d
+#
+# Health check:
+#   curl http://localhost:8080/actuator/health
+#
+# H2 Console (desarrollo):
+#   http://localhost:8080/h2-console
+#   JDBC URL: jdbc:h2:mem:testdb
+#   User: sa
+#   Password: (vacía)
+#
+# Swagger UI:
+#   http://localhost:8080/swagger-ui.html
+#
+# API Endpoints:
+#   http://localhost:8080/api/fragments
+#   http://localhost:8080/api/memes
+#   http://localhost:8080/api/laws
+#   http://localhost:8080/api/excuses
+#
+# ============================================================================
