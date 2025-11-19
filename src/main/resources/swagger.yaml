@@ -1,0 +1,938 @@
+openapi: 3.0.0
+info:
+  title: EjercicioCopilot API
+  description: |
+    🦈 Generador de Excusas Tech creativas
+    
+    Combina fragmentos, memes argentinos y leyes del caos developer para generar excusas técnicas divertidas.
+    
+    **Tipos de Excusas:**
+    - SIMPLE: Solo fragmentos
+    - CON_MEME: Fragmentos + meme
+    - CON_LEY: Fragmentos + ley
+    - ULTRA_SHARK: Todo combinado
+    
+    **Roles soportados:** DEV, QA, DEVOPS, PM, ARCHITECT, DEVREL
+  contact:
+    name: Equipo EjercicioCopilot
+    url: https://github.com/ejerciciocopilot
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080
+    description: Servidor local de desarrollo
+  - url: http://localhost:8081
+    description: Servidor alternativo
+
+tags:
+  - name: Fragments
+    description: CRUD de fragmentos (Contexto, Causa, Consecuencia, Recomendación)
+  - name: Memes
+    description: CRUD de memes tech argentinos
+  - name: Laws
+    description: CRUD de leyes y axiomas del desarrollo
+  - name: Excuses
+    description: Generación y consulta de excusas tech
+
+paths:
+  /api/fragments:
+    get:
+      tags:
+        - Fragments
+      summary: Obtener todos los fragmentos
+      description: Retorna una lista de todos los fragmentos, opcionalmente filtrados por tipo
+      parameters:
+        - name: tipo
+          in: query
+          description: Filtrar por tipo de fragmento
+          required: false
+          schema:
+            type: string
+            enum:
+              - CONTEXTO
+              - CAUSA
+              - CONSECUENCIA
+              - RECOMENDACION
+      responses:
+        '200':
+          description: Lista de fragmentos obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/FragmentResponseDTO'
+        '400':
+          description: Parámetros inválidos
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      tags:
+        - Fragments
+      summary: Crear un nuevo fragmento
+      description: Crea un nuevo fragmento con los datos proporcionados
+      requestBody:
+        description: Datos del fragmento a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FragmentRequestDTO'
+      responses:
+        '201':
+          description: Fragmento creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FragmentResponseDTO'
+        '400':
+          description: Datos inválidos o incompletos
+        '500':
+          description: Error interno del servidor
+
+  /api/fragments/{id}:
+    get:
+      tags:
+        - Fragments
+      summary: Obtener fragmento por ID
+      description: Retorna un fragmento específico por su identificador
+      parameters:
+        - name: id
+          in: path
+          description: ID del fragmento
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Fragmento encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FragmentResponseDTO'
+        '404':
+          description: Fragmento no encontrado
+        '500':
+          description: Error interno del servidor
+    
+    put:
+      tags:
+        - Fragments
+      summary: Actualizar fragmento
+      description: Actualiza un fragmento existente
+      parameters:
+        - name: id
+          in: path
+          description: ID del fragmento
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Datos actualizados del fragmento
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FragmentRequestDTO'
+      responses:
+        '200':
+          description: Fragmento actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FragmentResponseDTO'
+        '404':
+          description: Fragmento no encontrado
+        '400':
+          description: Datos inválidos
+        '500':
+          description: Error interno del servidor
+    
+    delete:
+      tags:
+        - Fragments
+      summary: Eliminar fragmento
+      description: Elimina un fragmento de la base de datos
+      parameters:
+        - name: id
+          in: path
+          description: ID del fragmento
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Fragmento eliminado exitosamente
+        '404':
+          description: Fragmento no encontrado
+        '500':
+          description: Error interno del servidor
+
+  /api/memes:
+    get:
+      tags:
+        - Memes
+      summary: Obtener todos los memes
+      description: Retorna una lista completa de memes tech argentinos
+      responses:
+        '200':
+          description: Lista de memes obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemeResponseDTO'
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      tags:
+        - Memes
+      summary: Crear un nuevo meme
+      description: Crea un nuevo meme tech argentino
+      requestBody:
+        description: Datos del meme a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemeRequestDTO'
+      responses:
+        '201':
+          description: Meme creado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemeResponseDTO'
+        '400':
+          description: Datos inválidos o incompletos
+        '500':
+          description: Error interno del servidor
+
+  /api/memes/{id}:
+    get:
+      tags:
+        - Memes
+      summary: Obtener meme por ID
+      description: Retorna un meme específico por su identificador
+      parameters:
+        - name: id
+          in: path
+          description: ID del meme
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Meme encontrado
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemeResponseDTO'
+        '404':
+          description: Meme no encontrado
+        '500':
+          description: Error interno del servidor
+    
+    put:
+      tags:
+        - Memes
+      summary: Actualizar meme
+      description: Actualiza un meme existente
+      parameters:
+        - name: id
+          in: path
+          description: ID del meme
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Datos actualizados del meme
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/MemeRequestDTO'
+      responses:
+        '200':
+          description: Meme actualizado exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemeResponseDTO'
+        '404':
+          description: Meme no encontrado
+        '400':
+          description: Datos inválidos
+        '500':
+          description: Error interno del servidor
+    
+    delete:
+      tags:
+        - Memes
+      summary: Eliminar meme
+      description: Elimina un meme de la base de datos
+      parameters:
+        - name: id
+          in: path
+          description: ID del meme
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Meme eliminado exitosamente
+        '404':
+          description: Meme no encontrado
+        '500':
+          description: Error interno del servidor
+
+  /api/laws:
+    get:
+      tags:
+        - Laws
+      summary: Obtener todas las leyes
+      description: Retorna una lista completa de leyes y axiomas del desarrollo
+      parameters:
+        - name: category
+          in: query
+          description: Filtrar por categoría
+          required: false
+          schema:
+            type: string
+            enum:
+              - Murphy
+              - Hofstadter
+              - Dilbert
+              - DevOps
+              - DevAxiom
+      responses:
+        '200':
+          description: Lista de leyes obtenida correctamente
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/LawResponseDTO'
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      tags:
+        - Laws
+      summary: Crear una nueva ley
+      description: Crea una nueva ley o axioma del desarrollo
+      requestBody:
+        description: Datos de la ley a crear
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LawRequestDTO'
+      responses:
+        '201':
+          description: Ley creada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LawResponseDTO'
+        '400':
+          description: Datos inválidos o incompletos
+        '500':
+          description: Error interno del servidor
+
+  /api/laws/{id}:
+    get:
+      tags:
+        - Laws
+      summary: Obtener ley por ID
+      description: Retorna una ley específica por su identificador
+      parameters:
+        - name: id
+          in: path
+          description: ID de la ley
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Ley encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LawResponseDTO'
+        '404':
+          description: Ley no encontrada
+        '500':
+          description: Error interno del servidor
+    
+    put:
+      tags:
+        - Laws
+      summary: Actualizar ley
+      description: Actualiza una ley existente
+      parameters:
+        - name: id
+          in: path
+          description: ID de la ley
+          required: true
+          schema:
+            type: integer
+            format: int64
+      requestBody:
+        description: Datos actualizados de la ley
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LawRequestDTO'
+      responses:
+        '200':
+          description: Ley actualizada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LawResponseDTO'
+        '404':
+          description: Ley no encontrada
+        '400':
+          description: Datos inválidos
+        '500':
+          description: Error interno del servidor
+    
+    delete:
+      tags:
+        - Laws
+      summary: Eliminar ley
+      description: Elimina una ley de la base de datos
+      parameters:
+        - name: id
+          in: path
+          description: ID de la ley
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '204':
+          description: Ley eliminada exitosamente
+        '404':
+          description: Ley no encontrada
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/random:
+    get:
+      tags:
+        - Excuses
+      summary: Generar excusa aleatoria
+      description: Genera una excusa simple combinando fragmentos aleatorios
+      responses:
+        '200':
+          description: Excusa generada exitosamente
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: No hay fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/daily:
+    get:
+      tags:
+        - Excuses
+      summary: Obtener excusa del día
+      description: |
+        Genera una excusa reproducible para el día actual.
+        La misma excusa se retorna todo el día basándose en la fecha como seed.
+      responses:
+        '200':
+          description: Excusa del día generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: No hay fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/meme:
+    get:
+      tags:
+        - Excuses
+      summary: Generar excusa con meme
+      description: Genera una excusa simple y le añade un meme aleatorio
+      responses:
+        '200':
+          description: Excusa con meme generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: No hay fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/law:
+    get:
+      tags:
+        - Excuses
+      summary: Generar excusa con ley
+      description: Genera una excusa simple y la justifica con una ley aleatoria
+      responses:
+        '200':
+          description: Excusa con ley generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: No hay fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/ultra:
+    get:
+      tags:
+        - Excuses
+      summary: Generar excusa ULTRA_SHARK
+      description: |
+        Genera una excusa ULTRA_SHARK combinando:
+        - Fragmentos (contexto, causa, consecuencia, recomendación)
+        - Meme tech aleatorio
+        - Ley del desarrollo aleatoria
+        
+        Es la versión más completa y entretenida.
+      responses:
+        '200':
+          description: Excusa ULTRA_SHARK generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: No hay fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/role/{rol}:
+    get:
+      tags:
+        - Excuses
+      summary: Generar excusa para rol específico
+      description: |
+        Genera una excusa personalizada para un rol específico.
+        Intenta usar fragmentos asociados al rol; si no hay, usa fragmentos generales.
+      parameters:
+        - name: rol
+          in: path
+          description: Rol del desarrollador
+          required: true
+          schema:
+            type: string
+            enum:
+              - DEV
+              - QA
+              - DEVOPS
+              - PM
+              - ARCHITECT
+              - DEVREL
+      responses:
+        '200':
+          description: Excusa para el rol generada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: Rol inválido o sin fragmentos disponibles
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses:
+    get:
+      tags:
+        - Excuses
+      summary: Obtener historial de excusas
+      description: Retorna todas las excusas generadas anteriormente
+      responses:
+        '200':
+          description: Historial de excusas
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/ExcuseResponseDTO'
+        '500':
+          description: Error interno del servidor
+    
+    post:
+      tags:
+        - Excuses
+      summary: Crear excusa personalizada
+      description: |
+        Crea una excusa personalizada a partir de IDs específicos de fragmentos.
+        Permite combinar elementos manualmente en lugar de usar selección aleatoria.
+      requestBody:
+        description: Datos para crear una excusa personalizada
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ExcuseRequestDTO'
+      responses:
+        '201':
+          description: Excusa personalizada creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '400':
+          description: Datos inválidos o fragmentos no encontrados
+        '500':
+          description: Error interno del servidor
+
+  /api/excuses/{id}:
+    get:
+      tags:
+        - Excuses
+      summary: Obtener excusa por ID
+      description: Retorna una excusa específica por su identificador
+      parameters:
+        - name: id
+          in: path
+          description: ID de la excusa
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Excusa encontrada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ExcuseResponseDTO'
+        '404':
+          description: Excusa no encontrada
+        '500':
+          description: Error interno del servidor
+
+components:
+  schemas:
+    FragmentRequestDTO:
+      type: object
+      description: DTO para crear/actualizar un fragmento
+      required:
+        - type
+        - text
+      properties:
+        type:
+          type: string
+          enum:
+            - CONTEXTO
+            - CAUSA
+            - CONSECUENCIA
+            - RECOMENDACION
+          description: Tipo de fragmento
+        text:
+          type: string
+          minLength: 10
+          maxLength: 500
+          description: Contenido del fragmento
+        role:
+          type: string
+          nullable: true
+          enum:
+            - DEV
+            - QA
+            - DEVOPS
+            - PM
+            - ARCHITECT
+            - DEVREL
+          description: Rol específico (opcional)
+      example:
+        type: CONTEXTO
+        text: Durante el despliegue del pipeline en producción
+        role: DEV
+
+    FragmentResponseDTO:
+      type: object
+      description: DTO de respuesta para fragmento
+      properties:
+        id:
+          type: integer
+          format: int64
+          description: ID único del fragmento
+        type:
+          type: string
+          enum:
+            - CONTEXTO
+            - CAUSA
+            - CONSECUENCIA
+            - RECOMENDACION
+        text:
+          type: string
+        role:
+          type: string
+          nullable: true
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 1
+        type: CONTEXTO
+        text: Durante el despliegue del pipeline
+        role: DEV
+        createdAt: '2024-01-20T14:30:45'
+
+    MemeRequestDTO:
+      type: object
+      description: DTO para crear/actualizar un meme
+      required:
+        - author
+        - quote
+      properties:
+        author:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Autor del meme
+        quote:
+          type: string
+          minLength: 10
+          maxLength: 500
+          description: Texto del meme
+      example:
+        author: Tano Pasman
+        quote: ¿CÓMO QUE FALLÓ EL PIPELINE?
+
+    MemeResponseDTO:
+      type: object
+      description: DTO de respuesta para meme
+      properties:
+        id:
+          type: integer
+          format: int64
+        author:
+          type: string
+        quote:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 1
+        author: Tano Pasman
+        quote: ¿CÓMO QUE FALLÓ EL PIPELINE?
+        createdAt: '2024-01-20T14:30:45'
+
+    LawRequestDTO:
+      type: object
+      description: DTO para crear/actualizar una ley
+      required:
+        - name
+        - description
+        - category
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 100
+          description: Nombre de la ley
+        description:
+          type: string
+          minLength: 10
+          maxLength: 500
+          description: Descripción completa
+        category:
+          type: string
+          enum:
+            - Murphy
+            - Hofstadter
+            - Dilbert
+            - DevOps
+            - DevAxiom
+          description: Categoría de la ley
+      example:
+        name: Ley de Murphy
+        description: Si algo puede salir mal, saldrá mal durante la demo.
+        category: Murphy
+
+    LawResponseDTO:
+      type: object
+      description: DTO de respuesta para ley
+      properties:
+        id:
+          type: integer
+          format: int64
+        name:
+          type: string
+        description:
+          type: string
+        category:
+          type: string
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 1
+        name: Ley de Murphy
+        description: Si algo puede salir mal, saldrá mal durante la demo.
+        category: Murphy
+        createdAt: '2024-01-20T14:30:45'
+
+    ExcuseRequestDTO:
+      type: object
+      description: DTO para crear una excusa personalizada
+      properties:
+        contextId:
+          type: integer
+          format: int64
+          description: ID del fragmento CONTEXTO
+        causeId:
+          type: integer
+          format: int64
+          description: ID del fragmento CAUSA
+        consequenceId:
+          type: integer
+          format: int64
+          description: ID del fragmento CONSECUENCIA
+        recommendationId:
+          type: integer
+          format: int64
+          description: ID del fragmento RECOMENDACION
+        memeId:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID del meme (opcional)
+        lawId:
+          type: integer
+          format: int64
+          nullable: true
+          description: ID de la ley (opcional)
+        type:
+          type: string
+          enum:
+            - SIMPLE
+            - CON_MEME
+            - CON_LEY
+            - ULTRA_SHARK
+          nullable: true
+          description: Tipo de excusa
+        role:
+          type: string
+          nullable: true
+          enum:
+            - DEV
+            - QA
+            - DEVOPS
+            - PM
+            - ARCHITECT
+            - DEVREL
+          description: Rol específico (opcional)
+      example:
+        contextId: 1
+        causeId: 2
+        consequenceId: 3
+        recommendationId: 4
+        memeId: 1
+        lawId: 1
+        type: ULTRA_SHARK
+        role: DEV
+
+    ExcuseResponseDTO:
+      type: object
+      description: DTO de respuesta para una excusa completa
+      properties:
+        id:
+          type: integer
+          format: int64
+        context:
+          $ref: '#/components/schemas/FragmentResponseDTO'
+        cause:
+          $ref: '#/components/schemas/FragmentResponseDTO'
+        consequence:
+          $ref: '#/components/schemas/FragmentResponseDTO'
+        recommendation:
+          $ref: '#/components/schemas/FragmentResponseDTO'
+        meme:
+          $ref: '#/components/schemas/MemeResponseDTO'
+          nullable: true
+        law:
+          $ref: '#/components/schemas/LawResponseDTO'
+          nullable: true
+        type:
+          type: string
+          enum:
+            - SIMPLE
+            - CON_MEME
+            - CON_LEY
+            - ULTRA_SHARK
+        role:
+          type: string
+          nullable: true
+        seed:
+          type: integer
+          format: int64
+          description: Seed para reproducibilidad
+        createdAt:
+          type: string
+          format: date-time
+      example:
+        id: 1
+        context:
+          id: 1
+          type: CONTEXTO
+          text: Durante el despliegue del pipeline
+          role: DEV
+          createdAt: '2024-01-20T14:30:45'
+        cause:
+          id: 2
+          type: CAUSA
+          text: El token de CI/CD venció
+          role: null
+          createdAt: '2024-01-20T14:30:45'
+        consequence:
+          id: 3
+          type: CONSECUENCIA
+          text: Tuvimos que hacer rollback
+          role: null
+          createdAt: '2024-01-20T14:30:45'
+        recommendation:
+          id: 4
+          type: RECOMENDACION
+          text: Automatizar rotación de secretos
+          role: null
+          createdAt: '2024-01-20T14:30:45'
+        meme:
+          id: 1
+          author: Tano Pasman
+          quote: ¿CÓMO QUE FALLÓ EL PIPELINE?
+          createdAt: '2024-01-20T14:30:45'
+        law:
+          id: 1
+          name: Ley de Murphy
+          description: Si algo puede salir mal, saldrá mal durante la demo.
+          category: Murphy
+          createdAt: '2024-01-20T14:30:45'
+        type: ULTRA_SHARK
+        role: DEV
+        seed: 1234567890
+        createdAt: '2024-01-20T14:30:45'
