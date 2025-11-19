@@ -92,10 +92,14 @@ public class FragmentService {
                         existing.setText(dto.getText());
                     }
                     if (dto.getType() != null) {
-                        existing.setType(dto.getType());
+                        existing.setType(Enum.valueOf(existing.getType().getDeclaringClass(), dto.getType()));
                     }
                     if (dto.getRole() != null) {
-                        existing.setRole(dto.getRole());
+                        try {
+                            existing.setRole(Enum.valueOf(existing.getRole() != null ? existing.getRole().getDeclaringClass() : com.ejerciciocopilot.model.Role.class, dto.getRole()));
+                        } catch (IllegalArgumentException e) {
+                            throw new IllegalArgumentException("Rol inválido: " + dto.getRole());
+                        }
                     }
                     existing.setUpdatedAt(LocalDateTime.now());
                     return fragmentRepository.save(existing);

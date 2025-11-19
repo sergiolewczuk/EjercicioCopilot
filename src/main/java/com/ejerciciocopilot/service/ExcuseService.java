@@ -88,6 +88,8 @@ public class ExcuseService {
         excuse.setType(ExcuseType.SIMPLE);
         excuse.setSeed(System.nanoTime());
         excuse.setCreatedAt(LocalDateTime.now());
+        excuse.setUpdatedAt(null);
+        excuse.setUpdatedAt(null);
         return excuseRepository.save(excuse);
     }
 
@@ -184,6 +186,7 @@ public class ExcuseService {
         excuse.setType(ExcuseType.SIMPLE);
         excuse.setSeed(System.nanoTime());
         excuse.setCreatedAt(LocalDateTime.now());
+        excuse.setUpdatedAt(null);
 
         return excuseRepository.save(excuse);
     }
@@ -208,6 +211,7 @@ public class ExcuseService {
         excuse.setType(ExcuseType.SIMPLE);
         excuse.setSeed(seed);
         excuse.setCreatedAt(LocalDateTime.now());
+        excuse.setUpdatedAt(null);
 
         return excuseRepository.save(excuse);
     }
@@ -255,6 +259,7 @@ public class ExcuseService {
             excuse.setSeed(System.nanoTime());
         }
         excuse.setCreatedAt(LocalDateTime.now());
+        excuse.setUpdatedAt(null);
 
         return excuseRepository.save(excuse);
     }

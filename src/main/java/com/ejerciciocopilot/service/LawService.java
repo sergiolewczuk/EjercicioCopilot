@@ -71,6 +71,7 @@ public class LawService {
         if (law.getCreatedAt() == null) {
             law.setCreatedAt(LocalDateTime.now());
         }
+        law.setUpdatedAt(null);
         return lawRepository.save(law);
     }
 

@@ -61,6 +61,7 @@ public class MemeService {
         if (meme.getCreatedAt() == null) {
             meme.setCreatedAt(LocalDateTime.now());
         }
+        meme.setUpdatedAt(null); // aseguramos coherencia inicial
         return memeRepository.save(meme);
     }
 
