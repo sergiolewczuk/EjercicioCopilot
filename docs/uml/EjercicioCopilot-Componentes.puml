@@ -28,6 +28,8 @@ package "Capa de Presentación (HTTP)" {
     component [FragmentController] as fragController
     component [MemeController] as memeController
     component [LawController] as lawController
+    component [RoleController] as roleController
+    component [HealthController] as healthController
 }
 
 package "Capa de Aplicación (DTOs & Mappers)" {
@@ -69,6 +71,8 @@ client --> excController
 client --> fragController
 client --> memeController
 client --> lawController
+client --> roleController
+client --> healthController
 
 excController --> excMapper
 fragController --> fragMapper
@@ -79,6 +83,8 @@ excController --> excService
 fragController --> fragService
 memeController --> memeService
 lawController --> lawService
+roleController --> excService : consulta roles indirecta (enum)
+healthController --> excService : estado lógico (opcional)
 
 excService --> excRepoInterface
 fragService --> fragRepoInterface
@@ -96,6 +102,7 @@ memeRepoImpl --> h2db
 lawRepoImpl --> h2db
 
 jsonLoader -.-> h2db: carga inicial
+jsonLoader -.-> excService : datos disponibles
 
 ' Relaciones internas entre servicios
 excService ..> fragRepoInterface: usa

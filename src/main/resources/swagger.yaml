@@ -33,8 +33,117 @@ tags:
     description: CRUD de leyes y axiomas del desarrollo
   - name: Excuses
     description: Generación y consulta de excusas tech
+  - name: System
+    description: Endpoints de sistema (salud, roles)
 
 paths:
+  /health:
+    get:
+      tags:
+        - System
+      summary: Health check simple
+      description: Retorna estado simple de la aplicación (wrapper sobre Actuator). Útil para monitoreo básico.
+      responses:
+        '200':
+          description: Aplicación operativa
+          content:
+            text/plain:
+              schema:
+                type: string
+              example: OK
+        '500':
+          description: Error interno del servidor
+
+  /api/roles:
+    get:
+      tags:
+        - System
+      summary: Listar roles soportados
+      description: Devuelve lista de valores del enum Role disponibles para generación de excusas.
+      responses:
+        '200':
+          description: Lista de roles disponibles
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/RoleResponseDTO'
+        '500':
+          description: Error interno del servidor
+    post:
+      tags:
+        - System
+      summary: Intento de creación de rol (no soportado)
+      description: Simula creación de rol; los roles son estáticos. Responde 501.
+      responses:
+        '501':
+          description: Operación no implementada (roles estáticos)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponseDTO'
+        '400':
+          description: Petición inválida
+        '500':
+          description: Error interno del servidor
+
+  /api/roles/{role}:
+    get:
+      tags:
+        - System
+      summary: Validar rol específico
+      description: Verifica si el rol existe dentro de los valores soportados.
+      parameters:
+        - name: role
+          in: path
+          required: true
+          description: Rol a validar
+          schema:
+            type: string
+            enum:
+              - DEV
+              - QA
+              - DEVOPS
+              - PM
+              - ARCHITECT
+              - DEVREL
+      responses:
+        '200':
+          description: Rol válido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  valid:
+                    type: boolean
+                  message:
+                    type: string
+                    nullable: true
+              example:
+                role: DEV
+                valid: true
+                message: null
+        '404':
+          description: Rol inválido
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  role:
+                    type: string
+                  valid:
+                    type: boolean
+                  message:
+                    type: string
+              example:
+                role: TESTER
+                valid: false
+                message: Rol inválido
+        '500':
+          description: Error interno del servidor
   /api/fragments:
     get:
       tags:
@@ -635,6 +744,43 @@ paths:
 
 components:
   schemas:
+    RoleResponseDTO:
+      type: object
+      description: Lista de roles soportados por la API.
+      properties:
+        roles:
+          type: array
+          items:
+            type: string
+            enum:
+              - DEV
+              - QA
+              - DEVOPS
+              - PM
+              - ARCHITECT
+              - DEVREL
+      example:
+        roles: [DEV, QA, DEVOPS, PM, ARCHITECT, DEVREL]
+
+    ErrorResponseDTO:
+      type: object
+      description: Formato estándar de respuesta de error del sistema.
+      properties:
+        message:
+          type: string
+        path:
+          type: string
+        status:
+          type: integer
+          format: int32
+        timestamp:
+          type: string
+          format: date-time
+      example:
+        message: Fragmento no encontrado
+        path: /api/fragments/999
+        status: 404
+        timestamp: '2025-11-19T10:15:30.123'
     FragmentRequestDTO:
       type: object
       description: DTO para crear/actualizar un fragmento

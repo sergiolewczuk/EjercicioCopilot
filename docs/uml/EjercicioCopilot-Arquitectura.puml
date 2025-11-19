@@ -65,6 +65,14 @@ package "PUERTO HTTP - Adaptadores de Entrada (Controllers)" #FFE6E6 {
         + update(id: Long, dto: LawRequestDTO): ResponseEntity<LawResponseDTO>
         + delete(id: Long): ResponseEntity<Void>
     }
+    class RoleController {
+        + listAll(): ResponseEntity<RoleResponseDTO>
+        + getRole(role: String): ResponseEntity<Map<String,Object>>
+        + createRole(body: Map<String,String>): ResponseEntity<Map<String,Object>>
+    }
+    class HealthController {
+        + health(): ResponseEntity<String>
+    }
 }
 
 ' ============================================================================
@@ -134,6 +142,15 @@ package "Contratos de API (Request/Response DTOs)" #E6F2FF {
         - description: String
         - category: String
         - createdAt: LocalDateTime
+    }
+    class RoleResponseDTO {
+        - roles: List<String>
+    }
+    class ErrorResponseDTO {
+        - message: String
+        - path: String
+        - status: int
+        - timestamp: LocalDateTime
     }
 }
 
@@ -359,6 +376,12 @@ package "Manejo de Errores" #FFE6E6 {
     class EntityNotFoundException {
         + EntityNotFoundException(message: String)
     }
+    class GlobalExceptionHandler {
+        + handleNotFound(ex: EntityNotFoundException): ResponseEntity<ErrorResponseDTO>
+        + handleIllegalArg(ex: IllegalArgumentException): ResponseEntity<ErrorResponseDTO>
+        + handleValidation(ex: MethodArgumentNotValidException): ResponseEntity<ErrorResponseDTO>
+        + handleGeneric(ex: Exception): ResponseEntity<ErrorResponseDTO>
+    }
 }
 
 ' ============================================================================
@@ -383,6 +406,9 @@ LawController --> LawService: usa
 LawController --> LawMapper: usa
 LawController --> LawResponseDTO: retorna
 LawController --> LawRequestDTO: recibe
+RoleController --> RoleResponseDTO: retorna
+RoleController --> ExcuseService: usa enum roles
+HealthController --> ExcuseService: estado (opcional)
 
 ' ============================================================================
 ' RELACIONES - Services → Models
@@ -471,5 +497,7 @@ FragmentService -.-> EntityNotFoundException: lanza
 MemeService -.-> EntityNotFoundException: lanza
 LawService -.-> EntityNotFoundException: lanza
 ExcuseService -.-> EntityNotFoundException: lanza
+GlobalExceptionHandler --> ErrorResponseDTO: retorna
+GlobalExceptionHandler ..> EntityNotFoundException: maneja
 
 @enduml
