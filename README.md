@@ -126,7 +126,8 @@ Una vez ejecutada la aplicación (cualquier opción), acceder a:
 | **🔵 Swagger UI** | http://localhost:8080/swagger-ui.html | Documentación interactiva |
 | **📊 OpenAPI JSON** | http://localhost:8080/v3/api-docs | Especificación OpenAPI 3.0 |
 | **💾 H2 Console** | http://localhost:8080/h2-console | Base de datos (sa / sin contraseña) |
-| **❤️ Health Check** | http://localhost:8080/actuator/health | Estado de la aplicación |
+| **❤️ Health Check (simple)** | http://localhost:8080/health | Wrapper directo (OK) |
+| **❤️ Health Check (Actuator)** | http://localhost:8080/actuator/health | Estado detallado |
 | **📈 Métricas** | http://localhost:8080/actuator/metrics | Métricas JVM |
 | **ℹ️ Info** | http://localhost:8080/actuator/info | Información de la aplicación |
 
@@ -263,6 +264,10 @@ GET /api/excuses/meme              # Excusa + meme aleatorio
 GET /api/excuses/law               # Excusa + ley aleatoria
 GET /api/excuses/ultra             # Excusa ULTRA_SHARK (todo completo) 🦈
 GET /api/excuses/role/{rol}        # Excusa para rol específico
+GET /health                        # Estado simple de la aplicación (OK)
+GET /api/roles                     # Lista de roles soportados
+GET /api/roles/{role}              # Validar rol específico
+POST /api/roles                    # Simulado (501 - no implementado, roles estáticos)
 ```
 
 **Roles disponibles**:
@@ -589,6 +594,35 @@ Diagramas PlantUML en `/docs/uml/`:
 
 - **[`swagger.yaml`](./src/main/resources/swagger.yaml)**: Especificación OpenAPI 3.0 completa
 - **[`DOCKER.md`](./DOCKER.md)**: Documentación completa de Docker
+- **GlobalExceptionHandler**: Manejo unificado de errores → `ErrorResponseDTO`
+- **DataLoader**: Precarga opcional desde archivos en `docs/json` si existen
+
+### Manejo de Errores (GlobalExceptionHandler)
+
+Las respuestas de error siguen este formato:
+
+```json
+{
+  "message": "Detalle del error",
+  "path": "/","status": 404,
+  "timestamp": "2025-11-19T10:15:30.123"
+}
+```
+
+Errores manejados:
+- 400 `IllegalArgumentException` / validaciones (`MethodArgumentNotValidException`)
+- 404 `EntityNotFoundException`
+- 409 `IllegalStateException`
+- 500 genérico cualquier excepción no controlada
+
+### Precarga de Datos (DataLoader)
+
+En arranque (perfil distinto de `test`) se leen JSON opcionales:
+- `dev_axioms.json` → genera fragmentos tipo CONTEXTO
+- `memes_argentinos.json` → carga memes
+- `murphy.json` → carga leyes categoría Murphy
+
+Si la tabla ya tiene registros no se duplica carga.
 
 ---
 
