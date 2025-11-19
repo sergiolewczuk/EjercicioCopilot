@@ -1,0 +1,198 @@
+@startuml EjercicioCopilot - Diagrama de Secuencia (Ultra Shark)
+
+!define DIRECTION top to bottom
+skinparam direction DIRECTION
+skinparam sequence {
+    ArrowColor #333333
+    ActorBorderColor #333333
+    LifeLineBorderColor #333333
+    LifeLineBackgroundColor #E6F2FF
+    ParticipantBorderColor #333333
+    ParticipantBackgroundColor #FFE6E6
+    BoxBackgroundColor #F0F0F0
+}
+
+title EjercicioCopilot - Secuencia de Generación ULTRA_SHARK
+
+actor User as user
+participant "ExcuseController\n(Adaptador HTTP)" as controller
+participant "ExcuseService\n(Núcleo de Negocio)" as service
+participant "FragmentRepository\n(Puerto Persistencia)" as fragRepo
+participant "MemeRepository\n(Puerto Persistencia)" as memeRepo
+participant "LawRepository\n(Puerto Persistencia)" as lawRepo
+participant "ExcuseRepository\n(Puerto Persistencia)" as excuseRepo
+database "H2 Database" as db
+
+user -> controller: GET /api/excuses/ultra
+activate controller
+
+note over controller
+  Request llega sin parámetros
+  Solo se ejecutan métodos predefinidos
+end note
+
+controller -> service: generateUltraShark()
+activate service
+
+note over service
+  1. Generar excusa base (SIMPLE)
+  2. Añadir meme aleatorio
+  3. Añadir ley aleatoria
+  4. Establecer tipo ULTRA_SHARK
+  5. Establecer seed para reproducibilidad
+  6. Persistir
+end note
+
+service -> fragRepo: findByType(CONTEXTO)
+activate fragRepo
+fragRepo -> db: SELECT * FROM fragments\nWHERE type='CONTEXTO'
+activate db
+db --> fragRepo: List<Fragment>
+deactivate db
+deactivate fragRepo
+fragRepo --> service: [Fragment contexto]
+
+note over service
+  Selecciona aleatoriamente usando Random
+end note
+
+service -> fragRepo: findByType(CAUSA)
+activate fragRepo
+fragRepo -> db: SELECT * FROM fragments\nWHERE type='CAUSA'
+activate db
+db --> fragRepo: List<Fragment>
+deactivate db
+deactivate fragRepo
+fragRepo --> service: [Fragment causa]
+
+service -> fragRepo: findByType(CONSECUENCIA)
+activate fragRepo
+fragRepo -> db: SELECT * FROM fragments\nWHERE type='CONSECUENCIA'
+activate db
+db --> fragRepo: List<Fragment>
+deactivate db
+deactivate fragRepo
+fragRepo --> service: [Fragment consecuencia]
+
+service -> fragRepo: findByType(RECOMENDACION)
+activate fragRepo
+fragRepo -> db: SELECT * FROM fragments\nWHERE type='RECOMENDACION'
+activate db
+db --> fragRepo: List<Fragment>
+deactivate db
+deactivate fragRepo
+fragRepo --> service: [Fragment recomendación]
+
+note over service
+  Se ensambla la excusa simple con los 4 fragmentos
+  Tipo = SIMPLE
+end note
+
+service -> memeRepo: findAll()
+activate memeRepo
+memeRepo -> db: SELECT * FROM memes
+activate db
+db --> memeRepo: List<Meme>
+deactivate db
+deactivate memeRepo
+memeRepo --> service: [Meme Tano Pasman, Meme Anónimo, ...]
+
+note over service
+  Selecciona un meme aleatorio de la lista
+  Ej: "¿CÓMO QUE FALLÓ EL PIPELINE?"
+end note
+
+service -> lawRepo: findAll()
+activate lawRepo
+lawRepo -> db: SELECT * FROM laws
+activate db
+db --> lawRepo: List<Law>
+deactivate db
+deactivate lawRepo
+lawRepo --> service: [Law Murphy, Law Hofstadter, ...]
+
+note over service
+  Selecciona una ley aleatoria de la lista
+  Ej: "Si algo puede salir mal, saldrá mal"
+end note
+
+note over service
+  Construir Excuse:
+  - context = Fragment contexto
+  - cause = Fragment causa
+  - consequence = Fragment consecuencia
+  - recommendation = Fragment recomendación
+  - meme = Meme seleccionado
+  - law = Law seleccionada
+  - type = ULTRA_SHARK
+  - seed = System.nanoTime()
+  - createdAt = LocalDateTime.now()
+end note
+
+service -> excuseRepo: save(excuse)
+activate excuseRepo
+excuseRepo -> db: INSERT INTO excuses\n(context_id, cause_id, consequence_id,\nrecommendation_id, meme_id, law_id,\ntype, seed, created_at)
+activate db
+db --> excuseRepo: Excuse con ID generado
+deactivate db
+deactivate excuseRepo
+excuseRepo --> service: Excuse completa
+
+deactivate service
+
+service --> controller: Excuse
+
+note over controller
+  Convertir entidad a DTO con ExcuseMapper
+  Todos los fragmentos, meme y ley estarán
+  incluidos en la respuesta (FetchType.LAZY)
+end note
+
+controller -> controller: ExcuseMapper.toResponse(excuse)
+
+controller --> user: ResponseEntity<ExcuseResponseDTO>\nHTTP 200 OK
+
+deactivate controller
+
+note over user
+  {
+    "id": 1,
+    "context": {
+      "id": 1,
+      "type": "CONTEXTO",
+      "text": "Durante el despliegue..."
+    },
+    "cause": {
+      "id": 2,
+      "type": "CAUSA",
+      "text": "El token de CI/CD venció..."
+    },
+    "consequence": {
+      "id": 3,
+      "type": "CONSECUENCIA",
+      "text": "Tuvimos que hacer rollback..."
+    },
+    "recommendation": {
+      "id": 4,
+      "type": "RECOMENDACION",
+      "text": "Automatizar rotación de secretos..."
+    },
+    "meme": {
+      "id": 1,
+      "author": "Tano Pasman",
+      "quote": "¿CÓMO QUE FALLÓ EL PIPELINE?"
+    },
+    "law": {
+      "id": 1,
+      "name": "Ley de Murphy",
+      "description": "Si algo puede salir mal...",
+      "category": "Murphy"
+    },
+    "type": "ULTRA_SHARK",
+    "role": null,
+    "seed": 1234567890,
+    "createdAt": "2024-01-20T14:30:45"
+  }
+end note
+
+@enduml

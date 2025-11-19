@@ -1,0 +1,174 @@
+@startuml EjercicioCopilot - Flujo Hexagonal
+
+!define DIRECTION left to right
+skinparam direction DIRECTION
+skinparam backgroundColor #FFFFFF
+
+title EjercicioCopilot - Flujo de Arquitectura Hexagonal (Ports & Adapters)
+
+rectangle "MUNDO EXTERNO" #FFE6E6 {
+    actor "Usuario / Cliente REST" as user
+}
+
+rectangle "PUERTO HTTP (Entrada)" #FFE6E6 {
+    component "HTTP Server\n(Tomcat - Spring Boot)" as httpPort
+}
+
+rectangle "ADAPTADORES DE ENTRADA" #FFE6E6 {
+    component "ExcuseController" as excAdapter
+    component "FragmentController" as fragAdapter
+    component "MemeController" as memeAdapter
+    component "LawController" as lawAdapter
+}
+
+rectangle "CONTRATOS (DTOs)" #E6F2FF {
+    component "Request DTOs" as requestDtos
+    component "Response DTOs" as responseDtos
+    component "Mappers" as mappers
+}
+
+rectangle "═══ NÚCLEO DE NEGOCIO (DOMINIO) ═══" #E6FFE6 {
+    rectangle "Lógica de Negocio Pura" {
+        component "ExcuseService\n(Generación de Excusas)" as excDomain
+        component "FragmentService\n(CRUD Fragmentos)" as fragDomain
+        component "MemeService\n(CRUD Memes)" as memeDomain
+        component "LawService\n(CRUD Leyes)" as lawDomain
+    }
+    
+    rectangle "Modelos de Dominio (Entidades)" {
+        component "Excuse (Entidad)" as excEntity
+        component "Fragment (Entidad)" as fragEntity
+        component "Meme (Entidad)" as memeEntity
+        component "Law (Entidad)" as lawEntity
+    }
+}
+
+rectangle "PUERTOS DE PERSISTENCIA (Salida)" #F0E6FF {
+    component "ExcuseRepository Interface" as excRepoPort
+    component "FragmentRepository Interface" as fragRepoPort
+    component "MemeRepository Interface" as memeRepoPort
+    component "LawRepository Interface" as lawRepoPort
+}
+
+rectangle "ADAPTADORES DE SALIDA" #F0E6FF {
+    component "ExcuseRepository Impl\n(JpaRepository)" as excAdapter_out
+    component "FragmentRepository Impl\n(JpaRepository)" as fragAdapter_out
+    component "MemeRepository Impl\n(JpaRepository)" as memeAdapter_out
+    component "LawRepository Impl\n(JpaRepository)" as lawAdapter_out
+}
+
+rectangle "PUERTO PERSISTENCIA" #E6FFFF {
+    database "H2 Database\n(En Memoria)" as db
+}
+
+rectangle "RECURSOS EXTERNOS" #E6FFFF {
+    component "JSONs de Precarga" as jsons
+}
+
+' Flujo de entrada
+user --> httpPort: HTTP Request
+httpPort --> excAdapter: GET /api/excuses/ultra
+httpPort --> fragAdapter: GET /api/fragments
+httpPort --> memeAdapter: GET /api/memes
+httpPort --> lawAdapter: GET /api/laws
+
+' Adaptadores → DTOs
+excAdapter --> requestDtos: convierte
+excAdapter --> mappers: usa
+fragAdapter --> requestDtos: convierte
+memeAdapter --> requestDtos: convierte
+lawAdapter --> requestDtos: convierte
+
+' DTOs → Dominio
+requestDtos --> excDomain: parámetros
+requestDtos --> fragDomain: parámetros
+requestDtos --> memeDomain: parámetros
+requestDtos --> lawDomain: parámetros
+
+' Dominio (Services)
+excDomain --> excEntity: crea/maneja
+excDomain --> fragEntity: usa
+excDomain --> memeEntity: usa
+excDomain --> lawEntity: usa
+
+fragDomain --> fragEntity: crea/maneja
+memeDomain --> memeEntity: crea/maneja
+lawDomain --> lawEntity: crea/maneja
+
+' Dominio → Puertos Persistencia
+excDomain --> excRepoPort: usa
+fragDomain --> fragRepoPort: usa
+memeDomain --> memeRepoPort: usa
+lawDomain --> lawRepoPort: usa
+
+' Puertos → Adaptadores Salida
+excRepoPort --> excAdapter_out: interfaz
+fragRepoPort --> fragAdapter_out: interfaz
+memeRepoPort --> memeAdapter_out: interfaz
+lawRepoPort --> lawAdapter_out: interfaz
+
+' Adaptadores Salida → BD
+excAdapter_out --> db: SQL (JPA)
+fragAdapter_out --> db: SQL (JPA)
+memeAdapter_out --> db: SQL (JPA)
+lawAdapter_out --> db: SQL (JPA)
+
+' Precarga
+jsons -.-> db: carga inicial
+
+' Respuesta
+db --> excAdapter_out: resultados
+excAdapter_out --> excRepoPort: recupera
+excRepoPort --> excDomain: entidades
+excDomain --> mappers: convierte
+mappers --> responseDtos: crea
+responseDtos --> excAdapter: ResponseDTO
+excAdapter --> httpPort: HTTP Response
+httpPort --> user: JSON Response
+
+note right of user
+  Cliente REST
+  (Postman, Browser, etc.)
+end note
+
+note right of httpPort
+  Puerto de Entrada
+  HTTP/REST
+end note
+
+note right of excAdapter
+  Adaptador de Entrada
+  Maneja protocolo HTTP
+  No contiene lógica de negocio
+end note
+
+note right of requestDtos
+  Contrato de API
+  Aislamiento del dominio
+end note
+
+note right of excDomain
+  Lógica de Negocio Pura
+  Independiente de frameworks
+  Generación de excusas
+end note
+
+note right of excRepoPort
+  Puerto de Salida
+  Define contrato
+  No implementación
+end note
+
+note right of excAdapter_out
+  Adaptador de Salida
+  Implementa contrato
+  JPA → Base de Datos
+end note
+
+note right of db
+  Puerto de Persistencia
+  H2 en memoria
+  Para tests
+end note
+
+@enduml

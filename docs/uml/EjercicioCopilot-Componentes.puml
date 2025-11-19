@@ -1,0 +1,105 @@
+@startuml EjercicioCopilot - Diagrama de Componentes
+
+!define DIRECTION left to right
+skinparam direction DIRECTION
+skinparam component {
+    BackgroundColor #FFE6E6
+    BorderColor #333333
+    ArrowColor #333333
+}
+skinparam interface {
+    BackgroundColor #E6F2FF
+    BorderColor #333333
+}
+skinparam package {
+    BackgroundColor #F0F0F0
+    BorderColor #333333
+    FontColor #000000
+}
+
+title EjercicioCopilot - Diagrama de Componentes
+
+package "Cliente HTTP" {
+    component [REST Client] as client
+}
+
+package "Capa de Presentación (HTTP)" {
+    component [ExcuseController] as excController
+    component [FragmentController] as fragController
+    component [MemeController] as memeController
+    component [LawController] as lawController
+}
+
+package "Capa de Aplicación (DTOs & Mappers)" {
+    component [ExcuseMapper] as excMapper
+    component [FragmentMapper] as fragMapper
+    component [MemeMapper] as memeMapper
+    component [LawMapper] as lawMapper
+}
+
+package "Capa de Dominio (Services)" {
+    component [ExcuseService] as excService
+    component [FragmentService] as fragService
+    component [MemeService] as memeService
+    component [LawService] as lawService
+}
+
+package "Capa de Acceso a Datos (Repositories)" {
+    interface "ExcuseRepository" as excRepoInterface
+    interface "FragmentRepository" as fragRepoInterface
+    interface "MemeRepository" as memeRepoInterface
+    interface "LawRepository" as lawRepoInterface
+    
+    component [ExcuseRepositoryImpl\n(JpaRepository)] as excRepoImpl
+    component [FragmentRepositoryImpl\n(JpaRepository)] as fragRepoImpl
+    component [MemeRepositoryImpl\n(JpaRepository)] as memeRepoImpl
+    component [LawRepositoryImpl\n(JpaRepository)] as lawRepoImpl
+}
+
+package "Persistencia (Base de Datos)" {
+    database [H2 Database\n(En Memoria)] as h2db
+}
+
+package "Recursos Externos" {
+    component [JSONs de Precarga] as jsonLoader
+}
+
+' Relaciones principales
+client --> excController
+client --> fragController
+client --> memeController
+client --> lawController
+
+excController --> excMapper
+fragController --> fragMapper
+memeController --> memeMapper
+lawController --> lawMapper
+
+excController --> excService
+fragController --> fragService
+memeController --> memeService
+lawController --> lawService
+
+excService --> excRepoInterface
+fragService --> fragRepoInterface
+memeService --> memeRepoInterface
+lawService --> lawRepoInterface
+
+excRepoInterface - excRepoImpl
+fragRepoInterface - fragRepoImpl
+memeRepoInterface - memeRepoImpl
+lawRepoInterface - lawRepoImpl
+
+excRepoImpl --> h2db
+fragRepoImpl --> h2db
+memeRepoImpl --> h2db
+lawRepoImpl --> h2db
+
+jsonLoader -.-> h2db: carga inicial
+
+' Relaciones internas entre servicios
+excService ..> fragRepoInterface: usa
+excService ..> memeRepoInterface: usa
+excService ..> lawRepoInterface: usa
+
+@enduml

@@ -1,0 +1,84 @@
+@startuml EjercicioCopilot - Diagrama de Despliegue
+
+!define DIRECTION top to bottom
+skinparam direction DIRECTION
+skinparam artifact {
+    BackgroundColor #FFE6E6
+    BorderColor #333333
+}
+skinparam node {
+    BackgroundColor #E6F2FF
+    BorderColor #333333
+}
+skinparam database {
+    BackgroundColor #FFFFE6
+    BorderColor #333333
+}
+
+title EjercicioCopilot - Diagrama de Despliegue
+
+node "Cliente (Navegador / Cliente REST)" as client {
+    artifact [REST Client / Browser] as browser
+}
+
+node "Servidor de Aplicación (JVM - Java 21)" as appServer {
+    artifact [Spring Boot 3.2.0] as springboot {
+        artifact [EjercicioCopilot JAR] as jar {
+            component [Controllers] as controllers
+            component [Services] as services
+            component [Repositories] as repositories
+        }
+    }
+}
+
+node "Runtime & Infraestructura" as runtime {
+    artifact [Maven] as maven
+    artifact [Lombok Processor] as lombok
+    artifact [Spring Framework] as spring
+    artifact [Jakarta Persistence] as jakarta
+}
+
+node "Base de Datos (Desarrollo/Testing)" as dbNode {
+    database [H2 Database\n(En Memoria)] as h2
+}
+
+node "Recursos Estáticos" as resources {
+    artifact [application.properties] as props
+    artifact [JSON Files\n(dev_axioms, murphy, etc.)] as jsons
+    artifact [Swagger/OpenAPI] as swagger
+}
+
+browser --> controllers: HTTP Requests\n(REST API)
+controllers --> services: llamadas internas
+services --> repositories: acceso a datos
+repositories --> h2: SQL (JPA)
+
+appServer -.-> runtime: depende de
+appServer -.-> resources: carga
+
+note right of jar
+  EjercicioCopilot v1.0.0
+  - Java 21
+  - Spring Boot 3.2.0
+  - Maven 3.6+
+  - H2 Database
+end note
+
+note right of jsons
+  Precarga de datos:
+  - dev_axioms.json
+  - murphy.json
+  - hofstadter.json
+  - memes_argentinos.json
+  - etc.
+end note
+
+note right of swagger
+  Swagger UI disponible en:
+  http://localhost:8080/swagger-ui.html
+  
+  H2 Console:
+  http://localhost:8080/h2-console
+end note
+
+@enduml

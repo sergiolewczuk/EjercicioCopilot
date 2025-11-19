@@ -1,0 +1,475 @@
+@startuml EjercicioCopilot - Arquitectura Hexagonal
+
+!define DIRECTION top to bottom
+skinparam direction DIRECTION
+skinparam classBackgroundColor #F0F0F0
+skinparam classBorderColor #333333
+skinparam arrowColor #333333
+skinparam backgroundColor #FFFFFF
+skinparam linetype ortho
+
+' ============================================================================
+' TITULO Y LEYENDA
+' ============================================================================
+title EjercicioCopilot - Generador de Excusas Tech\nArquitectura Hexagonal con Spring Boot 3.2 y Java 21
+
+legend right
+  |<#FFE6E6> <b>Controllers</b> (Adaptadores de Entrada - HTTP) |
+  |<#E6F2FF> <b>DTOs</b> (Contratos de API) |
+  |<#E6FFE6> <b>Services</b> (Núcleo de Negocio - Dominio) |
+  |<#FFFFE6> <b>Models</b> (Entidades JPA) |
+  |<#F0E6FF> <b>Repositories</b> (Adaptadores de Salida - Persistencia) |
+  |<#E6FFFF> <b>External</b> (Recursos Externos) |
+endlegend
+
+' ============================================================================
+' CAPA 1: ADAPTADORES DE ENTRADA (HTTP CONTROLLERS)
+' ============================================================================
+package "PUERTO HTTP - Adaptadores de Entrada (Controllers)" #FFE6E6 {
+    class ExcuseController {
+        - excuseService: ExcuseService
+        + getRandom(): ResponseEntity<ExcuseResponseDTO>
+        + getByRole(role: String): ResponseEntity<ExcuseResponseDTO>
+        + getDaily(): ResponseEntity<ExcuseResponseDTO>
+        + getMeme(): ResponseEntity<ExcuseResponseDTO>
+        + getLaw(): ResponseEntity<ExcuseResponseDTO>
+        + getUltra(): ResponseEntity<ExcuseResponseDTO>
+        + getById(id: Long): ResponseEntity<ExcuseResponseDTO>
+        + listAll(): ResponseEntity<List<ExcuseResponseDTO>>
+        + create(dto: ExcuseRequestDTO): ResponseEntity<ExcuseResponseDTO>
+    }
+
+    class FragmentController {
+        - fragmentService: FragmentService
+        + listAll(tipo: String): ResponseEntity<List<FragmentResponseDTO>>
+        + getById(id: Long): ResponseEntity<FragmentResponseDTO>
+        + create(dto: FragmentRequestDTO): ResponseEntity<FragmentResponseDTO>
+        + update(id: Long, dto: FragmentRequestDTO): ResponseEntity<FragmentResponseDTO>
+        + delete(id: Long): ResponseEntity<Void>
+    }
+
+    class MemeController {
+        - memeService: MemeService
+        + listAll(): ResponseEntity<List<MemeResponseDTO>>
+        + getById(id: Long): ResponseEntity<MemeResponseDTO>
+        + create(dto: MemeRequestDTO): ResponseEntity<MemeResponseDTO>
+        + update(id: Long, dto: MemeRequestDTO): ResponseEntity<MemeResponseDTO>
+        + delete(id: Long): ResponseEntity<Void>
+    }
+
+    class LawController {
+        - lawService: LawService
+        + listAll(category: String): ResponseEntity<List<LawResponseDTO>>
+        + getById(id: Long): ResponseEntity<LawResponseDTO>
+        + create(dto: LawRequestDTO): ResponseEntity<LawRequestDTO>
+        + update(id: Long, dto: LawRequestDTO): ResponseEntity<LawResponseDTO>
+        + delete(id: Long): ResponseEntity<Void>
+    }
+}
+
+' ============================================================================
+' CAPA 2: DATA TRANSFER OBJECTS (DTOs)
+' ============================================================================
+package "Contratos de API (Request/Response DTOs)" #E6F2FF {
+    class ExcuseRequestDTO {
+        - contextId: Long
+        - causeId: Long
+        - consequenceId: Long
+        - recommendationId: Long
+        - memeId: Long
+        - lawId: Long
+        - type: ExcuseType
+        - role: Role
+    }
+
+    class ExcuseResponseDTO {
+        - id: Long
+        - context: FragmentResponseDTO
+        - cause: FragmentResponseDTO
+        - consequence: FragmentResponseDTO
+        - recommendation: FragmentResponseDTO
+        - meme: MemeResponseDTO
+        - law: LawResponseDTO
+        - type: ExcuseType
+        - role: Role
+        - seed: Long
+        - createdAt: LocalDateTime
+    }
+
+    class FragmentRequestDTO {
+        - type: FragmentType
+        - text: String
+        - role: Role
+    }
+
+    class FragmentResponseDTO {
+        - id: Long
+        - type: FragmentType
+        - text: String
+        - role: Role
+        - createdAt: LocalDateTime
+    }
+
+    class MemeRequestDTO {
+        - author: String
+        - quote: String
+    }
+
+    class MemeResponseDTO {
+        - id: Long
+        - author: String
+        - quote: String
+        - createdAt: LocalDateTime
+    }
+
+    class LawRequestDTO {
+        - name: String
+        - description: String
+        - category: String
+    }
+
+    class LawResponseDTO {
+        - id: Long
+        - name: String
+        - description: String
+        - category: String
+        - createdAt: LocalDateTime
+    }
+}
+
+' ============================================================================
+' CAPA 3: MAPPERS (Transformadores DTO <-> Entity)
+' ============================================================================
+package "Mappers Estáticos (DTO ↔ Entity)" #E6F2FF {
+    class ExcuseMapper {
+        {static} + toEntity(dto: ExcuseRequestDTO): Excuse
+        {static} + toResponse(excuse: Excuse): ExcuseResponseDTO
+    }
+
+    class FragmentMapper {
+        {static} + toEntity(dto: FragmentRequestDTO): Fragment
+        {static} + toResponse(fragment: Fragment): FragmentResponseDTO
+    }
+
+    class MemeMapper {
+        {static} + toEntity(dto: MemeRequestDTO): Meme
+        {static} + toResponse(meme: Meme): MemeResponseDTO
+    }
+
+    class LawMapper {
+        {static} + toEntity(dto: LawRequestDTO): Law
+        {static} + toResponse(law: Law): LawResponseDTO
+    }
+}
+
+' ============================================================================
+' CAPA 4: NÚCLEO DE NEGOCIO (SERVICES - Domain Layer)
+' ============================================================================
+package "NÚCLEO DEL DOMINIO - Services (Lógica de Negocio)" #E6FFE6 {
+    class ExcuseService {
+        - excuseRepository: ExcuseRepository
+        - fragmentRepository: FragmentRepository
+        - memeRepository: MemeRepository
+        - lawRepository: LawRepository
+        - random: Random
+        + generateRandom(): Excuse
+        + generateWithMeme(): Excuse
+        + generateWithLaw(): Excuse
+        + generateUltraShark(): Excuse
+        + generateDaily(): Excuse
+        + generateByRole(role: String): Excuse
+        + findById(id: Long): Optional<Excuse>
+        + findAll(): List<Excuse>
+        + createFromDTO(dto: ExcuseRequestDTO): Excuse
+        - getRandomFragment(type: FragmentType): Fragment
+        - getRandomMeme(): Meme
+        - getRandomLaw(): Law
+    }
+
+    class FragmentService {
+        - fragmentRepository: FragmentRepository
+        + findById(id: Long): Optional<Fragment>
+        + findAll(): List<Fragment>
+        + create(fragment: Fragment): Fragment
+        + createFromDTO(dto: FragmentRequestDTO): Fragment
+        + update(id: Long, fragment: Fragment): Fragment
+        + updateFromDTO(id: Long, dto: FragmentRequestDTO): Fragment
+        + delete(id: Long): void
+    }
+
+    class MemeService {
+        - memeRepository: MemeRepository
+        + findById(id: Long): Optional<Meme>
+        + findAll(): List<Meme>
+        + create(meme: Meme): Meme
+        + createFromDTO(dto: MemeRequestDTO): Meme
+        + update(id: Long, meme: Meme): Meme
+        + updateFromDTO(id: Long, dto: MemeRequestDTO): Meme
+        + delete(id: Long): void
+    }
+
+    class LawService {
+        - lawRepository: LawRepository
+        + findById(id: Long): Optional<Law>
+        + findAll(): List<Law>
+        + create(law: Law): Law
+        + createFromDTO(dto: LawRequestDTO): Law
+        + update(id: Long, law: Law): Law
+        + updateFromDTO(id: Long, dto: LawRequestDTO): Law
+        + delete(id: Long): void
+    }
+}
+
+' ============================================================================
+' CAPA 5: MODELOS DE DOMINIO (ENTIDADES JPA)
+' ============================================================================
+package "Modelos de Dominio (Entidades JPA)" #FFFFE6 {
+    enum FragmentType {
+        CONTEXTO
+        CAUSA
+        CONSECUENCIA
+        RECOMENDACION
+    }
+
+    enum ExcuseType {
+        SIMPLE
+        CON_MEME
+        CON_LEY
+        ULTRA_SHARK
+    }
+
+    enum Role {
+        DEV
+        QA
+        DEVOPS
+        PM
+        ARCHITECT
+        DEVREL
+    }
+
+    class Fragment {
+        - id: Long
+        - type: FragmentType
+        - text: String
+        - role: Role
+        - createdAt: LocalDateTime
+    }
+
+    class Meme {
+        - id: Long
+        - author: String
+        - quote: String
+        - createdAt: LocalDateTime
+    }
+
+    class Law {
+        - id: Long
+        - name: String
+        - description: String
+        - category: String
+        - createdAt: LocalDateTime
+    }
+
+    class Excuse {
+        - id: Long
+        - context: Fragment (FetchType.LAZY)
+        - cause: Fragment (FetchType.LAZY)
+        - consequence: Fragment (FetchType.LAZY)
+        - recommendation: Fragment (FetchType.LAZY)
+        - meme: Meme (FetchType.LAZY, optional)
+        - law: Law (FetchType.LAZY, optional)
+        - type: ExcuseType
+        - role: Role (optional)
+        - seed: Long
+        - createdAt: LocalDateTime
+        - updatedAt: LocalDateTime
+    }
+}
+
+' ============================================================================
+' CAPA 6: ADAPTADORES DE SALIDA (REPOSITORIES - Persistencia)
+' ============================================================================
+package "PUERTO PERSISTENCIA - Adaptadores de Salida (Repositories)" #F0E6FF {
+    interface ExcuseRepository {
+        {abstract} + findById(id: Long): Optional<Excuse>
+        {abstract} + findAll(): List<Excuse>
+        {abstract} + save(excuse: Excuse): Excuse
+        {abstract} + delete(excuse: Excuse): void
+        {abstract} + deleteById(id: Long): void
+    }
+
+    interface FragmentRepository {
+        {abstract} + findById(id: Long): Optional<Fragment>
+        {abstract} + findAll(): List<Fragment>
+        {abstract} + findByType(type: FragmentType): List<Fragment>
+        {abstract} + findByTypeAndRole(type: FragmentType, role: Role): List<Fragment>
+        {abstract} + save(fragment: Fragment): Fragment
+        {abstract} + delete(fragment: Fragment): void
+        {abstract} + deleteById(id: Long): void
+    }
+
+    interface MemeRepository {
+        {abstract} + findById(id: Long): Optional<Meme>
+        {abstract} + findAll(): List<Meme>
+        {abstract} + save(meme: Meme): Meme
+        {abstract} + delete(meme: Meme): void
+        {abstract} + deleteById(id: Long): void
+    }
+
+    interface LawRepository {
+        {abstract} + findById(id: Long): Optional<Law>
+        {abstract} + findAll(): List<Law>
+        {abstract} + findByCategory(category: String): List<Law>
+        {abstract} + save(law: Law): Law
+        {abstract} + delete(law: Law): void
+        {abstract} + deleteById(id: Long): void
+    }
+}
+
+' ============================================================================
+' CAPA 7: INFRAESTRUCTURA (Base de Datos)
+' ============================================================================
+package "INFRAESTRUCTURA - Base de Datos H2" #E6FFFF {
+    database "H2 Database\n(En Memoria)" as H2DB {
+        entity "excuses" as exc_table
+        entity "fragments" as frag_table
+        entity "memes" as meme_table
+        entity "laws" as law_table
+    }
+}
+
+' ============================================================================
+' CAPA 8: RECURSOS EXTERNOS (JSONs)
+' ============================================================================
+package "Recursos Externos (JSONs para Precarga)" #E6FFFF {
+    file "dev_axioms.json" as axioms
+    file "murphy.json" as murphy
+    file "hofstadter.json" as hofstadter
+    file "dilbert.json" as dilbert
+    file "devops_principles.json" as devops
+    file "memes_argentinos.json" as memes_arg
+    file "dev-memes.json" as dev_memes
+    file "argento-memes.json" as argento_memes
+}
+
+' ============================================================================
+' EXCEPCIONES PERSONALIZADAS
+' ============================================================================
+package "Manejo de Errores" #FFE6E6 {
+    class EntityNotFoundException {
+        + EntityNotFoundException(message: String)
+    }
+}
+
+' ============================================================================
+' RELACIONES - Controllers → Services
+' ============================================================================
+ExcuseController --> ExcuseService: usa
+ExcuseController --> ExcuseMapper: usa
+ExcuseController --> ExcuseResponseDTO: retorna
+ExcuseController --> ExcuseRequestDTO: recibe
+
+FragmentController --> FragmentService: usa
+FragmentController --> FragmentMapper: usa
+FragmentController --> FragmentResponseDTO: retorna
+FragmentController --> FragmentRequestDTO: recibe
+
+MemeController --> MemeService: usa
+MemeController --> MemeMapper: usa
+MemeController --> MemeResponseDTO: retorna
+MemeController --> MemeRequestDTO: recibe
+
+LawController --> LawService: usa
+LawController --> LawMapper: usa
+LawController --> LawResponseDTO: retorna
+LawController --> LawRequestDTO: recibe
+
+' ============================================================================
+' RELACIONES - Services → Models
+' ============================================================================
+ExcuseService --> Excuse: genera/maneja
+ExcuseService --> Fragment: selecciona
+ExcuseService --> Meme: añade
+ExcuseService --> Law: añade
+ExcuseService --> ExcuseType: usa
+ExcuseService --> Role: usa
+
+FragmentService --> Fragment: maneja
+MemeService --> Meme: maneja
+LawService --> Law: maneja
+
+' ============================================================================
+' RELACIONES - Models
+' ============================================================================
+Excuse --> Fragment: context (ManyToOne, LAZY)
+Excuse --> Fragment: cause (ManyToOne, LAZY)
+Excuse --> Fragment: consequence (ManyToOne, LAZY)
+Excuse --> Fragment: recommendation (ManyToOne, LAZY)
+Excuse --> Meme: meme (ManyToOne, LAZY, optional)
+Excuse --> Law: law (ManyToOne, LAZY, optional)
+Excuse --> ExcuseType: type (Enum)
+Excuse --> Role: role (Enum, optional)
+
+Fragment --> FragmentType: type (Enum)
+Fragment --> Role: role (Enum, optional)
+
+' ============================================================================
+' RELACIONES - Services → Repositories
+' ============================================================================
+ExcuseService --> ExcuseRepository: usa
+ExcuseService --> FragmentRepository: usa
+ExcuseService --> MemeRepository: usa
+ExcuseService --> LawRepository: usa
+
+FragmentService --> FragmentRepository: usa
+MemeService --> MemeRepository: usa
+LawService --> LawRepository: usa
+
+' ============================================================================
+' RELACIONES - Repositories → Base de Datos
+' ============================================================================
+ExcuseRepository --> exc_table: persiste
+FragmentRepository --> frag_table: persiste
+MemeRepository --> meme_table: persiste
+LawRepository --> law_table: persiste
+
+' ============================================================================
+' RELACIONES - JSONs → Base de Datos (Precarga)
+' ============================================================================
+axioms --> frag_table: carga inicial
+murphy --> law_table: carga inicial
+hofstadter --> law_table: carga inicial
+dilbert --> law_table: carga inicial
+devops --> law_table: carga inicial
+memes_arg --> meme_table: carga inicial
+dev_memes --> meme_table: carga inicial
+argento_memes --> meme_table: carga inicial
+
+' ============================================================================
+' RELACIONES - Mappers
+' ============================================================================
+ExcuseMapper --> ExcuseRequestDTO: convierte
+ExcuseMapper --> Excuse: convierte
+ExcuseMapper --> ExcuseResponseDTO: convierte
+
+FragmentMapper --> FragmentRequestDTO: convierte
+FragmentMapper --> Fragment: convierte
+FragmentMapper --> FragmentResponseDTO: convierte
+
+MemeMapper --> MemeRequestDTO: convierte
+MemeMapper --> Meme: convierte
+MemeMapper --> MemeResponseDTO: convierte
+
+LawMapper --> LawRequestDTO: convierte
+LawMapper --> Law: convierte
+LawMapper --> LawResponseDTO: convierte
+
+' ============================================================================
+' RELACIONES - Excepciones
+' ============================================================================
+FragmentService -.-> EntityNotFoundException: lanza
+MemeService -.-> EntityNotFoundException: lanza
+LawService -.-> EntityNotFoundException: lanza
+ExcuseService -.-> EntityNotFoundException: lanza
+
+@enduml
